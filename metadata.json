@@ -1,0 +1,5 @@
+{
+  "name": "Help Desk -A.R",
+  "description": "An intuitive help desk ticketing system for managing IT support requests. Users can submit tickets, and admins can manage, assign, and resolve them efficiently.",
+  "requestFramePermissions": []
+}
