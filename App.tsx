@@ -3,7 +3,7 @@ import { useAuth, AuthProvider } from './hooks/useAuth.tsx';
 import { SettingsProvider } from './hooks/useSettings.tsx';
 import { ThemeProvider } from './hooks/useTheme.tsx';
 import useLocalStorage from './hooks/useLocalStorage.tsx';
-import { useRealTimeData } from './hooks/useRealTimeData'; // Added real-time data hook
+import { useFirebaseData } from './hooks/useFirebaseData'; // Added Firebase data hook
 import useDatabase from './hooks/useDatabase.tsx'; // Added database hook
 import Login from './components/Login';
 import TopNav from './components/TopNav';
@@ -70,13 +70,13 @@ const InfoModal: React.FC<{
 const AppContent: React.FC = () => {
     const { user, realUser, logout, updateUser, startImpersonation, stopImpersonation } = useAuth();
     const { 
-        tickets: realTimeTickets, 
-        users: realTimeUsers, 
-        technicians: realTimeTechnicians, 
-        symptoms: realTimeSymptoms, 
-        files: realTimeFiles, 
-        templates: realTimeTemplates 
-    } = useRealTimeData({ pollingInterval: 3000 }); // Poll every 3 seconds for real-time updates
+        tickets: firebaseTickets, 
+        users: firebaseUsers, 
+        technicians: firebaseTechnicians, 
+        symptoms: firebaseSymptoms, 
+        files: firebaseFiles, 
+        templates: firebaseTemplates 
+    } = useFirebaseData(); // Use Firebase for real-time updates
     const { isConnected, isLoading, error } = useDatabase(); // Initialize database connection
     
     // App-wide state with localStorage persistence using custom hook
@@ -87,13 +87,13 @@ const AppContent: React.FC = () => {
     const [allSymptoms, setAllSymptoms] = useLocalStorage<Symptom[]>('vistaran-helpdesk-symptoms', SYMPTOMS);
     const [allTemplates, setAllTemplates] = useLocalStorage<TicketTemplate[]>('vistaran-helpdesk-templates', TICKET_TEMPLATES);
     
-    // Use real-time data when available, fallback to localStorage data
-    const effectiveUsers = realTimeUsers.length > 0 ? realTimeUsers : allUsers;
-    const effectiveTickets = realTimeTickets.length > 0 ? realTimeTickets : allTickets;
-    const effectiveFiles = realTimeFiles.length > 0 ? realTimeFiles : allFiles;
-    const effectiveTechnicians = realTimeTechnicians.length > 0 ? realTimeTechnicians : allTechnicians;
-    const effectiveSymptoms = realTimeSymptoms.length > 0 ? realTimeSymptoms : allSymptoms;
-    const effectiveTemplates = realTimeTemplates.length > 0 ? realTimeTemplates : allTemplates;
+    // Use Firebase data when available, fallback to localStorage data
+    const effectiveUsers = firebaseUsers.length > 0 ? firebaseUsers : allUsers;
+    const effectiveTickets = firebaseTickets.length > 0 ? firebaseTickets : allTickets;
+    const effectiveFiles = firebaseFiles.length > 0 ? firebaseFiles : allFiles;
+    const effectiveTechnicians = firebaseTechnicians.length > 0 ? firebaseTechnicians : allTechnicians;
+    const effectiveSymptoms = firebaseSymptoms.length > 0 ? firebaseSymptoms : allSymptoms;
+    const effectiveTemplates = firebaseTemplates.length > 0 ? firebaseTemplates : allTemplates;
     
     const deriveInitialDepartments = (): string[] => {
         const deptSet = new Set<string>();

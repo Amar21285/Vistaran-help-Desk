@@ -7,6 +7,7 @@ import {
     generateNewTicketAdminEmail,
     generateNewTicketUserEmail 
 } from '../utils/email-service';
+import { createTicket } from '../utils/firebaseService';
 import { useSettings } from '../hooks/useSettings';
 import { USERS } from '../constants';
 import { GENERIC_EMAIL_TEMPLATE_ID } from '../utils/email';
@@ -218,7 +219,14 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ symptoms, setTickets, setCu
             photoUrl,
         };
 
-        setTickets(prev => [...prev, newTicket]);
+        // Save ticket to Firebase
+        try {
+            await createTicket(newTicket);
+        } catch (error) {
+            console.error('Failed to save ticket to Firebase:', error);
+            // Fallback to localStorage
+            setTickets(prev => [...prev, newTicket]);
+        }
         logUserAction(user, `Created new ticket #${newTicket.id}.`);
         
         // --- UX Flow: Show modal and navigate ---
