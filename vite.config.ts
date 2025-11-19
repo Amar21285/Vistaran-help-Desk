@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
+        chunkSizeWarningLimit: 1000, // Increase limit to 1000kb to reduce warnings
         rollupOptions: {
           output: {
             manualChunks: undefined, // Disable code splitting for smaller apps
