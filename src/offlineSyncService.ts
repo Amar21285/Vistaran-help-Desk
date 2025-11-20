@@ -8,6 +8,10 @@ import {
 } from 'firebase/firestore';
 import { Ticket, User } from '../types';
 
+// Track sync status
+let isSyncing = false;
+let lastSyncTime = 0;
+
 // Collection names
 const COLLECTIONS = {
   TICKETS: 'tickets',
@@ -20,7 +24,14 @@ const COLLECTIONS = {
 
 // Sync offline tickets when online
 export const syncOfflineTickets = async () => {
-  if (!navigator.onLine) return;
+  if (!navigator.onLine || isSyncing) return;
+  
+  // Prevent too frequent syncs
+  const now = Date.now();
+  if (now - lastSyncTime < 5000) return; // Minimum 5 seconds between syncs
+  
+  isSyncing = true;
+  lastSyncTime = now;
   
   try {
     const offlineTickets = JSON.parse(localStorage.getItem('offline-tickets') || '[]');
@@ -43,12 +54,21 @@ export const syncOfflineTickets = async () => {
     }
   } catch (error) {
     console.error('Error syncing offline tickets:', error);
+  } finally {
+    isSyncing = false;
   }
 };
 
 // Sync offline ticket updates when online
 export const syncOfflineUpdates = async () => {
-  if (!navigator.onLine) return;
+  if (!navigator.onLine || isSyncing) return;
+  
+  // Prevent too frequent syncs
+  const now = Date.now();
+  if (now - lastSyncTime < 5000) return; // Minimum 5 seconds between syncs
+  
+  isSyncing = true;
+  lastSyncTime = now;
   
   try {
     const offlineUpdates = JSON.parse(localStorage.getItem('offline-updates') || '[]');
@@ -72,12 +92,21 @@ export const syncOfflineUpdates = async () => {
     }
   } catch (error) {
     console.error('Error syncing offline updates:', error);
+  } finally {
+    isSyncing = false;
   }
 };
 
 // Sync offline ticket deletions when online
 export const syncOfflineDeletions = async () => {
-  if (!navigator.onLine) return;
+  if (!navigator.onLine || isSyncing) return;
+  
+  // Prevent too frequent syncs
+  const now = Date.now();
+  if (now - lastSyncTime < 5000) return; // Minimum 5 seconds between syncs
+  
+  isSyncing = true;
+  lastSyncTime = now;
   
   try {
     const offlineDeletions = JSON.parse(localStorage.getItem('offline-deletions') || '[]');
@@ -101,12 +130,21 @@ export const syncOfflineDeletions = async () => {
     }
   } catch (error) {
     console.error('Error syncing offline deletions:', error);
+  } finally {
+    isSyncing = false;
   }
 };
 
 // Sync offline user updates when online
 export const syncOfflineUserUpdates = async () => {
-  if (!navigator.onLine) return;
+  if (!navigator.onLine || isSyncing) return;
+  
+  // Prevent too frequent syncs
+  const now = Date.now();
+  if (now - lastSyncTime < 5000) return; // Minimum 5 seconds between syncs
+  
+  isSyncing = true;
+  lastSyncTime = now;
   
   try {
     const offlineUserUpdates = JSON.parse(localStorage.getItem('offline-user-updates') || '[]');
@@ -130,6 +168,8 @@ export const syncOfflineUserUpdates = async () => {
     }
   } catch (error) {
     console.error('Error syncing offline user updates:', error);
+  } finally {
+    isSyncing = false;
   }
 };
 

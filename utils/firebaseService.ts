@@ -15,6 +15,10 @@ import {
 } from 'firebase/firestore';
 import { Ticket, User, Technician, Symptom, ManagedFile, TicketTemplate } from '../types';
 
+// Add network status tracking
+let isFirebaseConnected = true;
+const firebaseConnectionListeners: Array<(connected: boolean) => void> = [];
+
 // Collection names
 const COLLECTIONS = {
   TICKETS: 'tickets',
@@ -23,6 +27,47 @@ const COLLECTIONS = {
   SYMPTOMS: 'symptoms',
   FILES: 'files',
   TEMPLATES: 'templates'
+};
+
+// Firebase connection monitoring
+export const addFirebaseConnectionListener = (callback: (connected: boolean) => void) => {
+  firebaseConnectionListeners.push(callback);
+};
+
+export const removeFirebaseConnectionListener = (callback: (connected: boolean) => void) => {
+  const index = firebaseConnectionListeners.indexOf(callback);
+  if (index > -1) {
+    firebaseConnectionListeners.splice(index, 1);
+  }
+};
+
+// Monitor Firebase connection
+let connectionMonitor: any;
+export const startFirebaseConnectionMonitor = () => {
+  if (connectionMonitor) return;
+  
+  connectionMonitor = setInterval(async () => {
+    try {
+      // Simple connectivity test
+      await getDocs(query(collection(db, COLLECTIONS.TICKETS), where('id', '==', 'test')));
+      if (!isFirebaseConnected) {
+        isFirebaseConnected = true;
+        firebaseConnectionListeners.forEach(callback => callback(true));
+      }
+    } catch (error) {
+      if (isFirebaseConnected) {
+        isFirebaseConnected = false;
+        firebaseConnectionListeners.forEach(callback => callback(false));
+      }
+    }
+  }, 10000); // Check every 10 seconds
+};
+
+export const stopFirebaseConnectionMonitor = () => {
+  if (connectionMonitor) {
+    clearInterval(connectionMonitor);
+    connectionMonitor = null;
+  }
 };
 
 // Ticket operations

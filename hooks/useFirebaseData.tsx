@@ -6,7 +6,11 @@ import {
   getTechnicians, 
   getSymptoms, 
   getFiles, 
-  getTemplates 
+  getTemplates,
+  addFirebaseConnectionListener,
+  removeFirebaseConnectionListener,
+  startFirebaseConnectionMonitor,
+  stopFirebaseConnectionMonitor
 } from '../utils/firebaseService';
 import { Ticket, User, Technician, Symptom, ManagedFile, TicketTemplate } from '../types';
 
@@ -21,6 +25,13 @@ interface FirebaseData {
 
 interface UseFirebaseDataProps {
   enabled?: boolean; // whether to enable real-time updates
+}
+
+interface DebugInfo {
+  initialized: boolean;
+  ticketsListenerActive: boolean;
+  dataFetchAttempts: number;
+  firebaseConnected: boolean;
 }
 
 /**
@@ -43,10 +54,11 @@ export const useFirebaseData = (props: UseFirebaseDataProps = {}) => {
   });
   
   // Debug state
-  const [debugInfo, setDebugInfo] = useState({
+  const [debugInfo, setDebugInfo] = useState<DebugInfo>({
     initialized: false,
     ticketsListenerActive: false,
-    dataFetchAttempts: 0
+    dataFetchAttempts: 0,
+    firebaseConnected: true
   });
   
   // Loading and error states
@@ -95,6 +107,22 @@ export const useFirebaseData = (props: UseFirebaseDataProps = {}) => {
   useEffect(() => {
     if (!enabled) return;
     
+    // Start Firebase connection monitor
+    startFirebaseConnectionMonitor();
+    
+    // Add connection listener
+    const handleConnectionChange = (connected: boolean) => {
+      console.log('Firebase connection status changed:', connected);
+      setDebugInfo(prev => ({ ...prev, firebaseConnected: connected }));
+      
+      // If we just reconnected, refresh data
+      if (connected) {
+        refreshData();
+      }
+    };
+    
+    addFirebaseConnectionListener(handleConnectionChange);
+    
     // Initial data load
     refreshData();
     
@@ -142,6 +170,8 @@ export const useFirebaseData = (props: UseFirebaseDataProps = {}) => {
       console.log('Cleaning up Firebase listeners...');
       unsubscribeTickets();
       clearInterval(intervalId);
+      removeFirebaseConnectionListener(handleConnectionChange);
+      stopFirebaseConnectionMonitor();
     };
   }, [refreshData, enabled]);
   

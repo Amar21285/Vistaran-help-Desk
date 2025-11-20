@@ -22,10 +22,15 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
-        chunkSizeWarningLimit: 1000, // Increase limit to 1000kb to reduce warnings
+        chunkSizeWarningLimit: 1500, // Increase limit to 1500kb to reduce warnings
         rollupOptions: {
           output: {
-            manualChunks: undefined, // Disable code splitting for smaller apps
+            manualChunks: {
+              // Split vendor and firebase chunks to reduce main bundle size
+              vendor: ['react', 'react-dom'],
+              firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth'],
+              recharts: ['recharts']
+            }
           }
         }
       }
