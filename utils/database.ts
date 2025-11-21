@@ -1,4 +1,4 @@
-import { Ticket, User, Technician, Symptom, TicketTemplate, ManagedFile } from '../types';
+import type { Ticket, User, Technician, Symptom, TicketTemplate, ManagedFile } from '../types';
 
 // Database configuration interface
 export interface DatabaseConfig {

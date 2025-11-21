@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import type { Ticket, User } from '../types';
+import { TicketStatus, Role } from '../types';
 import { usePerformanceMonitoring } from '../hooks/usePerformanceMonitoring';
 
 interface DashboardProps {
@@ -97,7 +98,7 @@ const RecentTickets: React.FC<{ tickets: Ticket[]; users: User[] }> = React.memo
           return (
             <div key={ticket.id} className="border-b border-slate-200 dark:border-slate-700 pb-3 last:border-0 last:pb-0">
               <div className="flex justify-between">
-                <h4 className="font-medium">{ticket.title}</h4>
+                <h4 className="font-medium">{ticket.description || `Ticket #${ticket.id}`}</h4>
                 <span className={`px-2 py-1 rounded text-xs ${
                   ticket.status === 'Open' ? 'bg-blue-100 text-blue-800' :
                   ticket.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
@@ -135,7 +136,6 @@ const OptimizedDashboard: React.FC<DashboardProps> = ({ tickets, users, globalFi
     
     const filterLower = globalFilter.toLowerCase();
     return tickets.filter(ticket => 
-      ticket.title.toLowerCase().includes(filterLower) ||
       ticket.description.toLowerCase().includes(filterLower) ||
       ticket.id.toLowerCase().includes(filterLower)
     );
@@ -155,10 +155,11 @@ const OptimizedDashboard: React.FC<DashboardProps> = ({ tickets, users, globalFi
     
     filteredTickets.forEach(ticket => {
       switch (ticket.status) {
-        case 'Open': stats.open++; break;
-        case 'In Progress': stats.inProgress++; break;
-        case 'Resolved': stats.resolved++; break;
-        case 'Closed': stats.closed++; break;
+        case TicketStatus.OPEN: stats.open++; break;
+        case TicketStatus.IN_PROGRESS: stats.inProgress++; break;
+        case TicketStatus.RESOLVED: stats.resolved++; break;
+        // Handle closed status if it exists in the enum
+        case 'Closed' as unknown as TicketStatus: stats.closed++; break;
       }
     });
     
@@ -179,8 +180,9 @@ const OptimizedDashboard: React.FC<DashboardProps> = ({ tickets, users, globalFi
     
     users.forEach(user => {
       switch (user.role) {
-        case 'Admin': stats.admins++; break;
-        case 'Technician': stats.technicians++; break;
+        case Role.ADMIN: stats.admins++; break;
+        // Handle technician role if it exists
+        case 'Technician' as unknown as Role: stats.technicians++; break;
         default: stats.regularUsers++; break;
       }
     });

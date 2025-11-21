@@ -11,7 +11,8 @@ import {
   where, 
   orderBy,
   writeBatch,
-  getDoc
+  getDoc,
+  type Firestore
 } from 'firebase/firestore';
 import type { Ticket, User, Technician, Symptom, ManagedFile, TicketTemplate } from '../types';
 
@@ -22,9 +23,9 @@ const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY_BASE = 1000; // 1 second
 const firebaseConnectionListeners: Array<(connected: boolean) => void> = [];
 
-// Check if db is initialized
+// Check if db is initialized with additional safety checks
 const isDbInitialized = () => {
-  return db !== undefined;
+  return db !== undefined && db !== null && typeof db === 'object' && db.constructor && db.constructor.name === 'Firestore';
 };
 
 // Collection names
@@ -62,7 +63,7 @@ export const startFirebaseConnectionMonitor = () => {
   const checkConnection = async () => {
     try {
       // Simple connectivity test
-      await getDocs(query(collection(db, COLLECTIONS.TICKETS), where('id', '==', 'test')));
+      await getDocs(query(collection(db!, COLLECTIONS.TICKETS), where('id', '==', 'test')));
       
       // Reset retry count on successful connection
       connectionRetryCount = 0;
@@ -139,7 +140,7 @@ export const createTicket = async (ticket: Omit<Ticket, 'id'>) => {
   }
   
   return withRetry(async () => {
-    const docRef = await addDoc(collection(db, COLLECTIONS.TICKETS), ticket);
+    const docRef = await addDoc(collection(db!, COLLECTIONS.TICKETS), ticket);
     return { id: docRef.id, ...ticket };
   }, 'createTicket').catch(error => {
     // If offline, store in local storage as backup
@@ -160,7 +161,7 @@ export const getTickets = async () => {
   }
   
   return withRetry(async () => {
-    const querySnapshot = await getDocs(collection(db, COLLECTIONS.TICKETS));
+    const querySnapshot = await getDocs(collection(db!, COLLECTIONS.TICKETS));
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
   }, 'getTickets').catch(error => {
     // Return cached tickets if offline
@@ -178,7 +179,7 @@ export const updateTicket = async (ticketId: string, updates: Partial<Ticket>) =
   }
   
   return withRetry(async () => {
-    const ticketRef = doc(db, COLLECTIONS.TICKETS, ticketId);
+    const ticketRef = doc(db!, COLLECTIONS.TICKETS, ticketId);
     await updateDoc(ticketRef, updates);
     return { id: ticketId, ...updates };
   }, 'updateTicket').catch(error => {
@@ -200,7 +201,7 @@ export const deleteTicket = async (ticketId: string) => {
   }
   
   return withRetry(async () => {
-    await deleteDoc(doc(db, COLLECTIONS.TICKETS, ticketId));
+    await deleteDoc(doc(db!, COLLECTIONS.TICKETS, ticketId));
     return ticketId;
   }, 'deleteTicket').catch(error => {
     // If offline, store deletion for later
@@ -223,7 +224,7 @@ export const listenToTickets = (callback: (tickets: Ticket[]) => void) => {
   
   // Try to order by dateCreated, but fall back to no ordering if field doesn't exist
   try {
-    const q = query(collection(db, COLLECTIONS.TICKETS), orderBy('dateCreated', 'desc'));
+    const q = query(collection(db!, COLLECTIONS.TICKETS), orderBy('dateCreated', 'desc'));
     
     return onSnapshot(q, (querySnapshot) => {
       const tickets = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
@@ -233,7 +234,7 @@ export const listenToTickets = (callback: (tickets: Ticket[]) => void) => {
     }, (error) => {
       console.error('Error listening to tickets with ordering:', error);
       // Fallback to query without ordering
-      const fallbackQ = query(collection(db, COLLECTIONS.TICKETS));
+      const fallbackQ = query(collection(db!, COLLECTIONS.TICKETS));
       return onSnapshot(fallbackQ, (fallbackQuerySnapshot) => {
         const tickets = fallbackQuerySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
         // Include offline tickets if any
@@ -246,7 +247,7 @@ export const listenToTickets = (callback: (tickets: Ticket[]) => void) => {
   } catch (error) {
     console.error('Error setting up ticket listener:', error);
     // Fallback to query without ordering
-    const q = query(collection(db, COLLECTIONS.TICKETS));
+    const q = query(collection(db!, COLLECTIONS.TICKETS));
     return onSnapshot(q, (querySnapshot) => {
       const tickets = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
       // Include offline tickets if any
@@ -268,7 +269,7 @@ export const listenToUserTickets = (userId: string, callback: (tickets: Ticket[]
   // Try to order by dateCreated, but fall back if field doesn't exist
   try {
     const q = query(
-      collection(db, COLLECTIONS.TICKETS), 
+      collection(db!, COLLECTIONS.TICKETS), 
       where('userId', '==', userId),
       orderBy('dateCreated', 'desc')
     );
@@ -283,7 +284,7 @@ export const listenToUserTickets = (userId: string, callback: (tickets: Ticket[]
       console.error('Error listening to user tickets with ordering:', error);
       // Fallback to query without ordering
       const fallbackQ = query(
-        collection(db, COLLECTIONS.TICKETS), 
+        collection(db!, COLLECTIONS.TICKETS), 
         where('userId', '==', userId)
       );
       return onSnapshot(fallbackQ, (fallbackQuerySnapshot) => {
@@ -300,7 +301,7 @@ export const listenToUserTickets = (userId: string, callback: (tickets: Ticket[]
     console.error('Error setting up user ticket listener:', error);
     // Fallback to query without ordering
     const q = query(
-      collection(db, COLLECTIONS.TICKETS), 
+      collection(db!, COLLECTIONS.TICKETS), 
       where('userId', '==', userId)
     );
     return onSnapshot(q, (querySnapshot) => {
@@ -327,7 +328,7 @@ export const getUsers = async () => {
   }
   
   return withRetry(async () => {
-    const querySnapshot = await getDocs(collection(db, COLLECTIONS.USERS));
+    const querySnapshot = await getDocs(collection(db!, COLLECTIONS.USERS));
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
   }, 'getUsers').catch(error => {
     // Return cached users if offline
@@ -346,7 +347,7 @@ export const listenToUsers = (callback: (users: User[]) => void) => {
     return () => {};
   }
   
-  const q = query(collection(db, COLLECTIONS.USERS));
+  const q = query(collection(db!, COLLECTIONS.USERS));
   
   return onSnapshot(q, (querySnapshot) => {
     const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
@@ -364,7 +365,7 @@ export const createUser = async (user: Omit<User, 'id'>) => {
   }
   
   return withRetry(async () => {
-    const docRef = await addDoc(collection(db, COLLECTIONS.USERS), user);
+    const docRef = await addDoc(collection(db!, COLLECTIONS.USERS), user);
     return { id: docRef.id, ...user };
   }, 'createUser');
 };
@@ -376,7 +377,7 @@ export const updateUser = async (userId: string, updates: Partial<User>) => {
   }
   
   return withRetry(async () => {
-    const userRef = doc(db, COLLECTIONS.USERS, userId);
+    const userRef = doc(db!, COLLECTIONS.USERS, userId);
     await updateDoc(userRef, updates);
     return { id: userId, ...updates };
   }, 'updateUser').catch(error => {
@@ -399,7 +400,7 @@ export const deleteUser = async (userId: string) => {
   }
   
   return withRetry(async () => {
-    await deleteDoc(doc(db, COLLECTIONS.USERS, userId));
+    await deleteDoc(doc(db!, COLLECTIONS.USERS, userId));
     return userId;
   }, 'deleteUser');
 };
@@ -416,7 +417,7 @@ export const getTechnicians = async () => {
   }
   
   return withRetry(async () => {
-    const querySnapshot = await getDocs(collection(db, COLLECTIONS.TECHNICIANS));
+    const querySnapshot = await getDocs(collection(db!, COLLECTIONS.TECHNICIANS));
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Technician));
   }, 'getTechnicians').catch(error => {
     // Return cached technicians if offline
@@ -435,7 +436,7 @@ export const listenToTechnicians = (callback: (technicians: Technician[]) => voi
     return () => {};
   }
   
-  const q = query(collection(db, COLLECTIONS.TECHNICIANS));
+  const q = query(collection(db!, COLLECTIONS.TECHNICIANS));
   
   return onSnapshot(q, (querySnapshot) => {
     const technicians = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Technician));
@@ -453,7 +454,7 @@ export const createTechnician = async (technician: Omit<Technician, 'id'>) => {
   }
   
   return withRetry(async () => {
-    const docRef = await addDoc(collection(db, COLLECTIONS.TECHNICIANS), technician);
+    const docRef = await addDoc(collection(db!, COLLECTIONS.TECHNICIANS), technician);
     return { id: docRef.id, ...technician };
   }, 'createTechnician');
 };
@@ -466,7 +467,7 @@ export const updateTechnician = async (technicianId: string, updates: Partial<Te
   }
   
   return withRetry(async () => {
-    const technicianRef = doc(db, COLLECTIONS.TECHNICIANS, technicianId);
+    const technicianRef = doc(db!, COLLECTIONS.TECHNICIANS, technicianId);
     await updateDoc(technicianRef, updates);
     return { id: technicianId, ...updates };
   }, 'updateTechnician');
@@ -480,7 +481,7 @@ export const deleteTechnician = async (technicianId: string) => {
   }
   
   return withRetry(async () => {
-    await deleteDoc(doc(db, COLLECTIONS.TECHNICIANS, technicianId));
+    await deleteDoc(doc(db!, COLLECTIONS.TECHNICIANS, technicianId));
     return technicianId;
   }, 'deleteTechnician');
 };
@@ -497,7 +498,7 @@ export const getSymptoms = async () => {
   }
   
   return withRetry(async () => {
-    const querySnapshot = await getDocs(collection(db, COLLECTIONS.SYMPTOMS));
+    const querySnapshot = await getDocs(collection(db!, COLLECTIONS.SYMPTOMS));
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Symptom));
   }, 'getSymptoms').catch(error => {
     // Return cached symptoms if offline
@@ -520,7 +521,7 @@ export const getFiles = async () => {
   }
   
   return withRetry(async () => {
-    const querySnapshot = await getDocs(collection(db, COLLECTIONS.FILES));
+    const querySnapshot = await getDocs(collection(db!, COLLECTIONS.FILES));
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ManagedFile));
   }, 'getFiles').catch(error => {
     // Return cached files if offline
@@ -543,7 +544,7 @@ export const getTemplates = async () => {
   }
   
   return withRetry(async () => {
-    const querySnapshot = await getDocs(collection(db, COLLECTIONS.TEMPLATES));
+    const querySnapshot = await getDocs(collection(db!, COLLECTIONS.TEMPLATES));
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TicketTemplate));
   }, 'getTemplates').catch(error => {
     // Return cached templates if offline

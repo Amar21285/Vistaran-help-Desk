@@ -6,7 +6,7 @@ import {
   deleteDoc, 
   doc 
 } from 'firebase/firestore';
-import { Ticket, User } from '../types';
+import type { Ticket, User } from '../types';
 
 // Track sync status
 let isSyncing = false;
@@ -26,9 +26,19 @@ const COLLECTIONS = {
   TEMPLATES: 'templates'
 };
 
+// Check if db is initialized with additional safety checks
+const isDbInitialized = () => {
+  return db !== undefined && db !== null && typeof db === 'object' && db.constructor && db.constructor.name === 'Firestore';
+};
+
+// Type guard for db
+const isValidDb = (db: any): db is import('firebase/firestore').Firestore => {
+  return db !== undefined && db !== null && typeof db === 'object' && db.constructor && db.constructor.name === 'Firestore';
+};
+
 // Sync offline tickets when online
 export const syncOfflineTickets = async () => {
-  if (!navigator.onLine || isSyncing) return;
+  if (!navigator.onLine || isSyncing || !isValidDb(db)) return;
   
   // Prevent too frequent syncs
   const now = Date.now();
@@ -48,7 +58,7 @@ export const syncOfflineTickets = async () => {
           try {
             // Remove the offline flag and create in Firestore
             const { offline, ...ticketData } = ticket;
-            const docRef = await addDoc(collection(db, COLLECTIONS.TICKETS), ticketData);
+            const docRef = await addDoc(collection(db!, COLLECTIONS.TICKETS), ticketData);
             console.log(`Synced ticket ${ticket.id} to Firestore with ID ${docRef.id}`);
           } catch (error) {
             console.error(`Error syncing ticket ${ticket.id}:`, error);
@@ -84,7 +94,7 @@ export const syncOfflineTickets = async () => {
 
 // Sync offline ticket updates when online
 export const syncOfflineUpdates = async () => {
-  if (!navigator.onLine || isSyncing) return;
+  if (!navigator.onLine || isSyncing || !isValidDb(db)) return;
   
   // Prevent too frequent syncs
   const now = Date.now();
@@ -101,7 +111,7 @@ export const syncOfflineUpdates = async () => {
       
       for (const update of offlineUpdates) {
         try {
-          const ticketRef = doc(db, COLLECTIONS.TICKETS, update.ticketId);
+          const ticketRef = doc(db!, COLLECTIONS.TICKETS, update.ticketId);
           await updateDoc(ticketRef, update.updates);
           console.log(`Synced update for ticket ${update.ticketId}`);
         } catch (error) {
@@ -137,7 +147,7 @@ export const syncOfflineUpdates = async () => {
 
 // Sync offline ticket deletions when online
 export const syncOfflineDeletions = async () => {
-  if (!navigator.onLine || isSyncing) return;
+  if (!navigator.onLine || isSyncing || !isValidDb(db)) return;
   
   // Prevent too frequent syncs
   const now = Date.now();
@@ -154,7 +164,7 @@ export const syncOfflineDeletions = async () => {
       
       for (const ticketId of offlineDeletions) {
         try {
-          const ticketRef = doc(db, COLLECTIONS.TICKETS, ticketId);
+          const ticketRef = doc(db!, COLLECTIONS.TICKETS, ticketId);
           await deleteDoc(ticketRef);
           console.log(`Synced deletion for ticket ${ticketId}`);
         } catch (error) {
@@ -190,7 +200,7 @@ export const syncOfflineDeletions = async () => {
 
 // Sync offline user updates when online
 export const syncOfflineUserUpdates = async () => {
-  if (!navigator.onLine || isSyncing) return;
+  if (!navigator.onLine || isSyncing || !isValidDb(db)) return;
   
   // Prevent too frequent syncs
   const now = Date.now();
@@ -207,7 +217,7 @@ export const syncOfflineUserUpdates = async () => {
       
       for (const update of offlineUserUpdates) {
         try {
-          const userRef = doc(db, COLLECTIONS.USERS, update.userId);
+          const userRef = doc(db!, COLLECTIONS.USERS, update.userId);
           await updateDoc(userRef, update.updates);
           console.log(`Synced update for user ${update.userId}`);
         } catch (error) {

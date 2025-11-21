@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recha
 interface ChartData {
     name: string;
     value: number;
+    [key: string]: any;
 }
 
 interface TicketStatusChartProps {

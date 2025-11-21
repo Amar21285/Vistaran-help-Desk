@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect } from 'react';
+import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type { User, LoginStatus, UserStatus } from '../types';
 import { Role, LoginStatus as LoginStatusEnum, UserStatus as UserStatusEnum } from '../types';
 import { USERS } from '../constants';

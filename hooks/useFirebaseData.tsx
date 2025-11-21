@@ -16,6 +16,7 @@ import {
 } from '../utils/firebaseService';
 import type { Ticket, User, Technician, Symptom, ManagedFile, TicketTemplate } from '../types';
 import { db } from '../src/firebase';
+import type { Firestore } from 'firebase/firestore';
 
 interface FirebaseData {
   tickets: Ticket[];
@@ -51,8 +52,8 @@ interface DebugInfo {
 export const useFirebaseData = (props: UseFirebaseDataProps = {}) => {
   const { enabled = true } = props;
   
-  // Check if Firebase is initialized
-  const isFirebaseInitialized = !!db;
+  // Check if Firebase is initialized with additional safety checks
+  const isFirebaseInitialized = !!db && db !== null && typeof db === 'object' && db.constructor.name === 'Firestore';
   
   // State for Firebase data
   const [firebaseData, setFirebaseData] = useState<FirebaseData>({

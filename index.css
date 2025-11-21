@@ -1,7 +1,9 @@
 /* stylelint-disable at-rule-no-unknown */
+/* csslint ignore:start */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* csslint ignore:end */
 /* stylelint-enable at-rule-no-unknown */
 
 /* Custom scrollbar for a more polished look */

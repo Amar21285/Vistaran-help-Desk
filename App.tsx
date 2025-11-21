@@ -248,6 +248,7 @@ const AppContent: React.FC = () => {
 
     const [globalFilter, setGlobalFilter] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [currentView, setCurrentView] = useState('dashboard'); // Add this state
 
     // Modal States
     const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -347,7 +348,7 @@ const AppContent: React.FC = () => {
     try {
         return (
             <div className="relative flex h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans">
-                {user && <Sidebar />}
+                {user && <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />}
                 
                 {/* Overlay for mobile */}
                 {user && isSidebarOpen && (
@@ -367,7 +368,6 @@ const AppContent: React.FC = () => {
                             setGlobalFilter={setGlobalFilter}
                             isImpersonating={!!(realUser && user.id !== realUser.id)}
                             stopImpersonation={stopImpersonation}
-                            onViewProfile={() => {}} // Will be handled by router
                             onToggleSidebar={() => setIsSidebarOpen(true)}
                         />
                     )}
@@ -380,10 +380,11 @@ const AppContent: React.FC = () => {
                                 setUsers={setAllUsers}
                                 onEditUser={setEditingUser}
                                 departments={allDepartments}
+                                setCurrentView={setCurrentView}
                               /> : <Dashboard tickets={effectiveTickets} users={effectiveUsers} globalFilter={globalFilter} />} />
                             <Route path="/tickets" element={<TicketManagement key="tickets" tickets={effectiveTickets} setTickets={setAllTickets} users={effectiveUsers} technicians={effectiveTechnicians} symptoms={effectiveSymptoms} globalFilter={globalFilter} setGlobalFilter={setGlobalFilter} setInfoModalContent={setInfoModalContent} departments={allDepartments} />} />
                             <Route path="/assigned-tickets" element={<TicketManagement key="assigned-tickets" tickets={effectiveTickets} setTickets={setAllTickets} users={effectiveUsers} technicians={effectiveTechnicians} symptoms={effectiveSymptoms} globalFilter={globalFilter} setGlobalFilter={setGlobalFilter} setInfoModalContent={setInfoModalContent} assignedToMeTechId={currentUserTechId} departments={allDepartments} />} />
-                            <Route path="/create-ticket" element={<CreateTicket templates={effectiveTemplates} symptoms={effectiveSymptoms} setTickets={setAllTickets} setInfoModalContent={setInfoModalContent} departments={allDepartments} />} />
+                            <Route path="/create-ticket" element={<CreateTicket templates={effectiveTemplates} symptoms={effectiveSymptoms} setTickets={setAllTickets} setInfoModalContent={setInfoModalContent} departments={allDepartments} setCurrentView={setCurrentView} />} />
                             <Route path="/users" element={<UserManagement users={effectiveUsers} setUsers={setAllUsers} globalFilter={globalFilter} onImpersonate={startImpersonation} onEditUser={setEditingUser} onPhotoUpdate={handlePhotoUpdate} departments={allDepartments} />} />
                             <Route path="/settings" element={<Settings templates={effectiveTemplates} setTemplates={setAllTemplates} symptoms={effectiveSymptoms} setSymptoms={setAllSymptoms} departments={allDepartments} setDepartments={setAllDepartments} users={effectiveUsers} tickets={effectiveTickets} />} />
                             <Route path="/profile" element={<Profile tickets={effectiveTickets} onEditUser={setEditingUser} />} />
