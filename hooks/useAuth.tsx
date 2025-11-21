@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect } from 'react';
-import { User, Role, LoginStatus, UserStatus } from '../types';
+import type { User, LoginStatus, UserStatus } from '../types';
+import { Role, LoginStatus as LoginStatusEnum, UserStatus as UserStatusEnum } from '../types';
 import { USERS } from '../constants';
 import { logUserAction } from '../utils/auditLogger';
 
@@ -45,11 +46,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const foundUser = USERS.find(u => u.email === email && u.password === password);
     
     if (!foundUser) {
-      return LoginStatus.INVALID_CREDENTIALS;
+      return LoginStatusEnum.INVALID_CREDENTIALS;
     }
     
-    if (foundUser.status !== UserStatus.ACTIVE) {
-      return LoginStatus.USER_INACTIVE;
+    if (foundUser.status !== UserStatusEnum.ACTIVE) {
+      return LoginStatusEnum.USER_INACTIVE;
     }
     
     setUser(foundUser);
@@ -57,7 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem('vistaran-helpdesk-userId', foundUser.id);
     localStorage.removeItem('vistaran-helpdesk-impersonatedUserId');
     logUserAction(foundUser, 'Logged in.');
-    return LoginStatus.SUCCESS;
+    return LoginStatusEnum.SUCCESS;
   }, []);
 
   const logout = useCallback(() => {

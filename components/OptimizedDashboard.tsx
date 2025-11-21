@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Ticket, User } from '../types';
+import type { Ticket, User } from '../types';
 import { usePerformanceMonitoring } from '../hooks/usePerformanceMonitoring';
 
 interface DashboardProps {

@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
-      base: './', // For GitHub Pages deployment
+      base: './', // For Vercel deployment - changed from '/' to './'
       server: {
         port: 5000,
         strictPort: false, // Allow falling back to another port if 5000 is in use

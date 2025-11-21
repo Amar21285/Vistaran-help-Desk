@@ -177,10 +177,10 @@ const AppContent: React.FC = () => {
     
     return (
         <div className="relative flex h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans">
-            <Sidebar />
+            {user && <Sidebar />}
             
             {/* Overlay for mobile */}
-            {isSidebarOpen && (
+            {user && isSidebarOpen && (
                 <div
                     onClick={() => setIsSidebarOpen(false)}
                     className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
@@ -189,16 +189,18 @@ const AppContent: React.FC = () => {
             )}
 
             <div className="flex-1 flex flex-col overflow-hidden">
-                <TopNav 
-                    user={user} 
-                    onLogout={logout} 
-                    globalFilter={globalFilter}
-                    setGlobalFilter={setGlobalFilter}
-                    isImpersonating={!!(realUser && user.id !== realUser.id)}
-                    stopImpersonation={stopImpersonation}
-                    onViewProfile={() => {}} // Will be handled by router
-                    onToggleSidebar={() => setIsSidebarOpen(true)}
-                />
+                {user && (
+                    <TopNav 
+                        user={user} 
+                        onLogout={logout} 
+                        globalFilter={globalFilter}
+                        setGlobalFilter={setGlobalFilter}
+                        isImpersonating={!!(realUser && user.id !== realUser.id)}
+                        stopImpersonation={stopImpersonation}
+                        onViewProfile={() => {}} // Will be handled by router
+                        onToggleSidebar={() => setIsSidebarOpen(true)}
+                    />
+                )}
                 <main className="flex-1 overflow-y-auto p-4 md:p-8">
                     <Routes>
                         <Route path="/login" element={<Login />} />
@@ -227,19 +229,21 @@ const AppContent: React.FC = () => {
                 </main>
             </div>
             
-            {/* Modals */}
-            {editingUser && <UserModal userToEdit={editingUser} currentUser={user} onClose={() => setEditingUser(null)} onSave={handleUpdateUser} departments={allDepartments} />}
-            {infoModalContent && (
-                <InfoModal 
-                    title={infoModalContent.title}
-                    message={infoModalContent.message}
-                    onClose={() => setInfoModalContent(null)} 
-                    actions={infoModalContent.actions}
-                />
+            {/* Modals - only show when user is logged in */}
+            {user && (
+                <>
+                    {editingUser && <UserModal userToEdit={editingUser} currentUser={user} onClose={() => setEditingUser(null)} onSave={handleUpdateUser} departments={allDepartments} />}
+                    {infoModalContent && (
+                        <InfoModal 
+                            title={infoModalContent.title}
+                            message={infoModalContent.message}
+                            onClose={() => setInfoModalContent(null)} 
+                            actions={infoModalContent.actions}
+                        />
+                    )}
+                    <Chatbot />
+                </>
             )}
-
-            {/* AI Chatbot */}
-            <Chatbot />
         </div>
     );
 };

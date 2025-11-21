@@ -1,4 +1,4 @@
-import { User, AuditLogEntry } from '../types';
+import type { User, AuditLogEntry } from '../types';
 
 const MAX_LOG_ENTRIES = 200;
 

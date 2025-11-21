@@ -1,4 +1,5 @@
-import { User, Role, UserStatus, Technician, Symptom, Ticket, Priority, TicketStatus, ManagedFile, FileType, TicketTemplate } from './types';
+import type { User, Technician, Symptom, Ticket, ManagedFile, TicketTemplate } from './types';
+import { Role, UserStatus, Priority, TicketStatus, FileType } from './types';
 
 export const USERS: User[] = [
     { id: 'USR001', name: 'Amarjeet yadav', email: 'ITsupport@vistaran.in', password: '88283671', role: Role.ADMIN, department: 'IT', status: UserStatus.ACTIVE, joinedDate: '2023-01-15T10:00:00Z', photo: 'https://randomuser.me/api/portraits/men/1.jpg', phone: '+918828367178', whatsapp: '+918828367178' },
@@ -170,7 +171,7 @@ export const TICKET_TEMPLATES: TicketTemplate[] = [
     {
         id: 'TPL009',
         title: 'Printer not printing',
-        description: 'Printer shows “paper jam” error even after checking tray.',
+        description: 'Printer shows "paper jam" error even after checking tray.',
         department: 'IT',
         priority: Priority.MEDIUM,
         symptomId: 'SYM013' // HP Printer
@@ -201,10 +202,10 @@ export const TICKET_TEMPLATES: TicketTemplate[] = [
     },
     {
         id: 'TPL013',
-        title: 'Travel reimbursement claim',
-        description: 'Submitted travel expenses for Oct; awaiting approval.',
+        title: 'Monthly expense report request',
+        description: 'Please share department expense report for September.',
         department: 'Accounts',
-        priority: Priority.MEDIUM,
+        priority: Priority.LOW,
         symptomId: 'SYM300'
     },
     {

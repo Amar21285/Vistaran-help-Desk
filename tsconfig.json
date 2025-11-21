@@ -23,7 +23,6 @@
         "./*"
       ]
     },
-    "allowImportingTsExtensions": true,
     "noEmit": true,
     // Optimization settings for better tree shaking
     "removeComments": true,
